@@ -1,0 +1,20 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual C# Express 2010
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RuneSlinger.server", "RuneSlinger.server\RuneSlinger.server.csproj", "{B70325D4-26D1-489A-AE98-41834A1E3E2A}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{B70325D4-26D1-489A-AE98-41834A1E3E2A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B70325D4-26D1-489A-AE98-41834A1E3E2A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B70325D4-26D1-489A-AE98-41834A1E3E2A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B70325D4-26D1-489A-AE98-41834A1E3E2A}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

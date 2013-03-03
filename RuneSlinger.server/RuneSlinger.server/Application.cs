@@ -1,14 +1,12 @@
-﻿//using System;
-//using System.Collections.Generic;
-//using System.Linq;
-//using System.Text;
-
-using System.IO;
+﻿using System.IO;
 using ExitGames.Logging.Log4Net;
 using Photon.SocketServer;
 using log4net;
 using log4net.Config;
 using System.Collections.Generic;
+using NHibernate.Cfg;
+using NHibernate.Mapping.ByCode;
+using RuneSlinger.server.Entities;
 
 namespace RuneSlinger.server
 {
@@ -45,7 +43,19 @@ namespace RuneSlinger.server
             XmlConfigurator.ConfigureAndWatch(new FileInfo(Path.Combine(BinaryPath, "log4net.config")));
             ExitGames.Logging.LogManager.SetLoggerFactory(Log4NetLoggerFactory.Instance);
 
+            SetupHibernate();
             log.Info("------ Application started for RuneSlinger ------");
+        }
+
+        private void SetupHibernate()
+        {
+            var config = new Configuration();
+            config.Configure();
+
+            var mapper = new ModelMapper();
+            mapper.AddMapping<Entities.Usermap>();
+
+            config.AddMapping(mapper.CompileMappingForAllExplicitlyAddedEntities());
         }
 
         protected override void TearDown()

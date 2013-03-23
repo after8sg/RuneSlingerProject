@@ -1,4 +1,8 @@
-﻿namespace RuneSlinger.server.ValueObjects
+﻿using System;
+using RuneSlinger.Base.Extensions;
+using System.Security.Cryptography;
+
+namespace RuneSlinger.server.ValueObjects
 {
     public class HashedPassword
     {
@@ -18,5 +22,20 @@
         {
         }
 
+        
+        public static HashedPassword fromPlainText(string password)
+        {
+            var random = new RNGCryptoServiceProvider();
+            var bytes = new byte[16];
+            random.GetBytes(bytes);
+            var salt = bytes.ToHexString();
+
+            return new HashedPassword((password + salt).ToSha1(), salt);
+        }
+
+        public bool EqualsPlainText(string plainText)
+        {
+            return (plainText + Salt).ToSha1() == Hash;
+        }
     }
 }

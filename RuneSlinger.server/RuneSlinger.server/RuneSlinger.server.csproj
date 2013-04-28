@@ -40,9 +40,8 @@
     <Reference Include="log4net">
       <HintPath>lib\log4net.dll</HintPath>
     </Reference>
-    <Reference Include="Newtonsoft.Json, Version=4.0.8.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\..\..\zzApp\Json45r11\Bin\Net40\Newtonsoft.Json.dll</HintPath>
+    <Reference Include="Newtonsoft.Json.Net20">
+      <HintPath>..\..\..\..\..\..\zzApp\Json35r8\Bin\DotNet20\Newtonsoft.Json.Net20.dll</HintPath>
     </Reference>
     <Reference Include="NHibernate">
       <HintPath>..\..\..\..\..\..\zzApp\NHibernate-3.3.1.GA-bin\Required_Bins\NHibernate.dll</HintPath>
@@ -53,6 +52,10 @@
     <Reference Include="PhotonHostRuntimeInterfaces">
       <HintPath>lib\PhotonHostRuntimeInterfaces.dll</HintPath>
       <EmbedInteropTypes>True</EmbedInteropTypes>
+    </Reference>
+    <Reference Include="RuneSlinger.Base, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\Unity\Assets\_Assemblies\RuneSlinger.Base.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -69,13 +72,21 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Abstract\IApplication.cs" />
     <Compile Include="Abstract\ICommandHandler.cs" />
+    <Compile Include="Abstract\INetworkedSession.cs" />
     <Compile Include="Application.cs" />
     <Compile Include="CommandContext.cs" />
     <Compile Include="CommandHandlers\LoginHandler.cs" />
     <Compile Include="CommandHandlers\RegisterHandler.cs" />
+    <Compile Include="CommandHandlers\SendLobbyMessageHandler.cs" />
+    <Compile Include="Components\AuthComponent.cs" />
+    <Compile Include="Components\HashSet.cs" />
+    <Compile Include="Components\LobbyComponent.cs" />
     <Compile Include="Entities\User.cs" />
+    <Compile Include="OperationException.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Registry.cs" />
     <Compile Include="RunePeer.cs" />
     <Compile Include="ValueObjects\HashedPassword.cs" />
   </ItemGroup>
@@ -87,12 +98,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <SubType>Designer</SubType>
     </None>
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\RuneSlinger.Base\RuneSlinger.Base.csproj">
-      <Project>{DE28701F-4BA7-47D3-9927-83187942AC00}</Project>
-      <Name>RuneSlinger.Base</Name>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

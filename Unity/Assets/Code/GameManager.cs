@@ -4,10 +4,13 @@ using ExitGames.Client.Photon;
 using System.Collections.Generic;
 using RuneSlinger.Base;
 using RuneSlinger.Base.Commands;
+using System;
+using RuneSlinger.Base.Abstract;
+using RuneSlinger.Base.Events;
 
 public class GameManager : MonoBehaviour
 {
-
+    public static GameManager Instance {get; private set;}
     enum GameManagerState
     {
         Form,
@@ -16,6 +19,7 @@ public class GameManager : MonoBehaviour
         LoggedIn
     }
 
+    private string _message;
     private string _displayUsername;
     private string _registerEmail;
     private string _registerPassword;
@@ -25,20 +29,55 @@ public class GameManager : MonoBehaviour
     private string _error;
     private GameManagerState _state;
 
+    private List<string> _messages;
     public void Start()
     {
-        
+        _message = "";   
         _registerEmail = "";
         _registerPassword = "";
         _username = "";
         _loginEmail = "";
         _loginPassword = "";
         _state = GameManagerState.Form;
+        _messages = new List<string>();
+
+        if (Instance != null)
+            throw new InvalidOperationException("Cannot create more than one game manager");
+
+        Instance = this;
     }
 
     public void Update()
     {
         
+    }
+
+    public void Publish(IEvent @event)
+    {
+
+        //can reimplement below into class as similar to how commands are handle
+        var joinLobbyEvent = @event as JoinLobbyEvent;
+        var lobbyJoinedEvent = @event as SessionJoinedLobbyEvent;
+        var lobbyLeftEvent = @event as SessionLeftLobbyEvent;
+        var messageSendEvent = @event as LobbyMessageSendEvent;
+
+        if (joinLobbyEvent != null)
+        {
+            foreach (var session in joinLobbyEvent.Sessions)
+                _messages.Add(string.Format("{0} - {1} is in lobby", session.Username, session.Id));
+        }
+        else if (lobbyJoinedEvent != null)
+        {
+            _messages.Add(string.Format("{0} - {1} entered the lobby", lobbyJoinedEvent.Session.Username, lobbyJoinedEvent.Session.Id));
+        }
+        else if (lobbyLeftEvent != null)
+        {
+            _messages.Add(string.Format("{0} left the lobby", lobbyLeftEvent.UserId));
+        }
+        else if (messageSendEvent != null)
+        {
+            _messages.Add(string.Format("{0} said {1}", messageSendEvent.UserId, messageSendEvent.Message));
+        }
     }
 
     //public void OnApplicationQuit()
@@ -88,7 +127,15 @@ public class GameManager : MonoBehaviour
         }
         else if (_state == GameManagerState.LoggedIn)
         {
-            GUILayout.Label("Success: " + _displayUsername) ;
+            //GUILayout.Label("Success: " + _displayUsername) ;
+            GUILayout.BeginVertical();
+            _message = GUILayout.TextField(_message);
+            if (GUILayout.Button("Send"))
+                SendLobbyMessage(_message);
+            GUILayout.EndVertical();
+
+            foreach (var message in _messages)
+                GUILayout.Label(message);
         }
 
         GUILayout.EndHorizontal();
@@ -101,6 +148,13 @@ public class GameManager : MonoBehaviour
         //}
 
         //GUI.Label(new Rect(0, 90, 300, 500), string.Join("\n", _messages.ToArray()));
+    }
+
+    private void SendLobbyMessage(string message)
+    {
+        NetworkManager.Instance.Dispatch(new SendLobbyMessageCommand(message),
+            response => { }
+            );
     }
 
     private void Login(string _email, string _password)

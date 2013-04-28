@@ -7,19 +7,22 @@ using System.Linq;
 using RuneSlinger.server.Entities;
 using System;
 using RuneSlinger.server.ValueObjects;
+using RuneSlinger.server.Components;
 
 namespace RuneSlinger.server.CommandHandlers
 {
     public class RegisterHandler : ICommandHandler<RegisterCommand>
     {
         private readonly ISession _database;
+        private readonly IApplication _application;
 
-        public RegisterHandler(ISession database)
+        public RegisterHandler(ISession database,IApplication application)
         {
             _database = database;
+            _application = application;
         }
 
-        public void Handle(CommandContext context, RegisterCommand command)
+        public void Handle(INetworkedSession session,CommandContext context, RegisterCommand command)
         {
             if (string.IsNullOrWhiteSpace(command.Username) || string.IsNullOrWhiteSpace(command.Password) || string.IsNullOrWhiteSpace(command.Email))
             {
@@ -54,6 +57,20 @@ namespace RuneSlinger.server.CommandHandlers
             };
 
             _database.Save(user);
+            session.Registry.Set(new AuthComponent(user.Id, user.Username, user.Email));
+
+            //try to join a session
+            try
+            {
+                //lobby.Join will throw operationException if fail
+                _application.Registry.Get<LobbyComponent>(lobby => lobby.Join(session));
+            }
+            catch (OperationException ex)
+            {
+                context.RaiseOperationError(ex.Message);
+                return;
+            }
+
             context.SetResponse(new RegisterResponse(user.Id));
 
         }

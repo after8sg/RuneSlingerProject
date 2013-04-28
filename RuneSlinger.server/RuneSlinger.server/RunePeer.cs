@@ -19,19 +19,24 @@ using Newtonsoft.Json.Bson;
 using RuneSlinger.Base.Abstract;
 using RuneSlinger.server.CommandHandlers;
 using RuneSlinger.Base.Commands;
+using RuneSlinger.server.Abstract;
 
 namespace RuneSlinger.server
 {
-    public class RunePeer : PeerBase
+    public class RunePeer : PeerBase, INetworkedSession
     {
         private static readonly ILog log = LogManager.GetLogger(typeof(RunePeer));
         private readonly Application _application;
         private readonly JsonSerializer _jsonSerializer;
 
+        public Registry Registry { get; private set; }
+
         public RunePeer(Application application,InitRequest initRequest) : base(initRequest.Protocol,initRequest.PhotonPeer)
         {
             _application = application;
             _jsonSerializer = new JsonSerializer();
+            Registry = new Registry();
+
             log.InfoFormat("Peer created at {0}:{1}", initRequest.RemoteIP, initRequest.RemotePort);
 
             //SendEvent(new EventData(
@@ -44,6 +49,19 @@ namespace RuneSlinger.server
             //    { 
             //        Unreliable = false 
             //    });
+        }
+
+        public void Publish(IEvent @event)
+        {
+            SendEvent(
+                new EventData(
+                    (byte)RuneEventCode.SendEvent, 
+                    new Dictionary<byte, object>
+                    {
+                        {(byte) RuneEventCodeParameter.EventType, @event.GetType().AssemblyQualifiedName},
+                        {(byte) RuneEventCodeParameter.EventBytes,SerializeBSON(@event)}
+                    })
+                    , new SendParameters { Unreliable = false });
         }
 
         protected override void OnOperationRequest(OperationRequest operationRequest, SendParameters sendParameters)
@@ -95,14 +113,19 @@ namespace RuneSlinger.server
 
                         var loginCommand = command as LoginCommand;
                         var registerCommand = command as RegisterCommand;
+                        var sendlobbyMessageCommand = command as SendLobbyMessageCommand;
 
                         if (loginCommand !=  null)
                         {
-                            (new LoginHandler(session)).Handle(commandContext, loginCommand);
+                            (new LoginHandler(session,_application)).Handle(this,commandContext, loginCommand);
                         }
                         else if (registerCommand != null)
                         {
-                            (new RegisterHandler(session)).Handle(commandContext, registerCommand);
+                            (new RegisterHandler(session, _application)).Handle(this, commandContext, registerCommand);
+                        }
+                        else if (sendlobbyMessageCommand != null)
+                        {
+                            (new SendLobbyMessageHandler( _application)).Handle(this, commandContext, sendlobbyMessageCommand);
                         }
                         else
                         {

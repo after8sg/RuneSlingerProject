@@ -95,7 +95,16 @@ public class NetworkManager : MonoBehaviour, IPhotonPeerListener
     
     public void OnEvent(EventData eventData)
     {
-        
+        if (eventData.Code != (byte)RuneEventCode.SendEvent)
+            throw new InvalidOperationException("Unknown event received from server");
+
+        var type = (string)eventData.Parameters[(byte)RuneEventCodeParameter.EventType];
+        var bytes = (byte[])eventData.Parameters[(byte)RuneEventCodeParameter.EventBytes];
+
+        var @event = (IEvent)DeserializeBSON(bytes, Type.GetType(type));
+
+        GameManager.Instance.Publish(@event);
+
     }
 
     public void OnStatusChanged(StatusCode statusCode)
@@ -112,11 +121,11 @@ public class NetworkManager : MonoBehaviour, IPhotonPeerListener
         _photonPeer.OpCustom((byte)RuneOperationCode.DispatchCommand, parameters, true);
     }
 
-    private object DeserializeBSON(byte[] bytes,Type type)
+    private object DeserializeBSON(byte[] bytes,Type type, bool isArray = false)
     {
         using (var ms = new MemoryStream(bytes))
         {
-            return _jsonSerializer.Deserialize(new BsonReader(ms), type);
+            return _jsonSerializer.Deserialize(new BsonReader(ms,isArray,DateTimeKind.Local), type);
         }
     }
 

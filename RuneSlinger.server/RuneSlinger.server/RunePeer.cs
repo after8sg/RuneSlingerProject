@@ -104,6 +104,7 @@ namespace RuneSlinger.server
 
                         var commandType = (string)operationRequest.Parameters[(byte)RuneOperationCodeParameter.CommandType];
                         var commandBytes = (byte[])operationRequest.Parameters[(byte)RuneOperationCodeParameter.CommandBytes];
+                        var commandId = operationRequest.Parameters[(byte)RuneOperationCodeParameter.CommandId];
 
                         ICommand command;
                         using (var ms = new MemoryStream(commandBytes))
@@ -143,6 +144,8 @@ namespace RuneSlinger.server
 
                         parameters[(byte)RuneOperationResponseParameter.OperationErrors] = SerializeBSON(commandContext.OperationErrors);
                         parameters[(byte)RuneOperationResponseParameter.PropertyErrors] = SerializeBSON(commandContext.PropertyErrors);
+                        parameters[(byte)RuneOperationResponseParameter.CommandId] = commandId;
+
                         SendOperationResponse(new OperationResponse((byte)RuneOperationResponse.CommandDispatched, parameters), sendParameters);
                         trans.Commit();
                     }

@@ -4,6 +4,7 @@
     {
         CommandResponse,
         OperationErrors,
-        PropertyErrors
+        PropertyErrors,
+        CommandId
     }
 }

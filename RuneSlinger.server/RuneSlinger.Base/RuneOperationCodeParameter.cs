@@ -3,6 +3,7 @@
     public enum RuneOperationCodeParameter : byte
     {
         CommandType,
-        CommandBytes
+        CommandBytes,
+        CommandId
     }
 }

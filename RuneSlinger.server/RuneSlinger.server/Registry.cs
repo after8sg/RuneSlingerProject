@@ -17,6 +17,17 @@ namespace RuneSlinger.server
             _componentLocks = new Dictionary<Type, object>();
         }
 
+        public bool Has<TComponent>()
+        {
+            return _components.ContainsKey(typeof(TComponent));
+        }
+
+        public void Remove<TComponent>()
+        {
+            _components.Remove(typeof(TComponent));
+            _componentLocks.Remove(typeof(TComponent));
+        }
+
         public void Set<TComponent>(TComponent component)
         {
             _components[typeof(TComponent)] = component;

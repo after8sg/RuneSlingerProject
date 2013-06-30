@@ -2,7 +2,7 @@
 using RuneSlinger.Base.Abstract;
 namespace RuneSlinger.Base.Commands
 {
-    public class RegisterCommand : ICommand
+    public class RegisterCommand : ICommand<RegisterResponse>
     {
         public string Email { get; private set; }
         public string Username { get; private set; }

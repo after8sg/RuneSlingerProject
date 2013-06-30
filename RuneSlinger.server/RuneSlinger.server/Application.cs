@@ -34,7 +34,7 @@ namespace RuneSlinger.server
             _peers = new List<RunePeer>();
             Registry = new Registry();
 
-            Registry.Set(new LobbyComponent());
+            Registry.Set(new LobbyComponent(this));
         }
 
         public ISession OpenSession()

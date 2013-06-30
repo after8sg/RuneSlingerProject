@@ -5,11 +5,18 @@ using Assets.Code.Abstract;
 using System.Linq;
 using Assets.Code;
 
-public class GameManager : MonoBehaviour, IEventHandler<JoinLobbyEvent>
+public class GameManager : 
+    MonoBehaviour, 
+    IEventHandler<JoinLobbyEvent>,
+    IEventHandler<SessionJoinedGameEvent>
 {
     public static GameManager Instance {get; private set;}
 
+    public uint UserId { get; set; }
+
     private GameObject _loginGo;
+    private LobbyGO _lobbyGo;
+    private GameGO _gameGo;
 
     public void Start()
     {
@@ -45,12 +52,23 @@ public class GameManager : MonoBehaviour, IEventHandler<JoinLobbyEvent>
         Destroy(_loginGo);
 
         var go = new GameObject("Lobby");
-        var component = go.AddComponent<LobbyGO>();
+        _lobbyGo = go.AddComponent<LobbyGO>();
 
         foreach (var session in @event.Sessions)
-            component.AddSession(session);
+            _lobbyGo.AddSession(session);
     }
-    
+
+    public void Handle(SessionJoinedGameEvent @event)
+    {
+        if (!@event.UserIds.Contains(UserId))
+            return;
+
+        _lobbyGo.gameObject.SetActive(false);
+
+        var go = new GameObject("Game");
+        _gameGo = go.AddComponent<GameGO>();
+    }
+
     //public void Publish(IEvent @event)
     //{
 

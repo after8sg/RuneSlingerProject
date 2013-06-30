@@ -100,8 +100,10 @@ public class LoginGO : MonoBehaviour
         NetworkManager.Instance.Dispatch(new LoginCommand(_email, _password), response =>
         {
             if (response.IsValid)
+            {
+                GameManager.Instance.UserId = response.Response.Id;
                 return;
-
+            }
 
             _state = LoginState.Error;
             _error = response.ToErrorString();
@@ -117,7 +119,10 @@ public class LoginGO : MonoBehaviour
         NetworkManager.Instance.Dispatch(new RegisterCommand(_email, _username, _password), response =>
         {
             if (response.IsValid)
+            {
+                GameManager.Instance.UserId = response.Response.Id;
                 return;
+            }
 
 
             _state = LoginState.Error;

@@ -19,28 +19,29 @@ public class GameTestManager : MonoBehaviour
     {
         var game = GameObjectFactory.Create<RuneGameGO>("Game");
         var ourSession = new GameSession("Player 1",1);
-        const int width = 5;
-        const int height = 10;
-        const int totalsize = width * height;
+        const int boardwidth = 5;
+        const int boardheight = 5;
+        const int totalsize = boardwidth * boardheight;
 
         game.Initialize(
             new[] { ourSession, new GameSession("Player 2", 2) },
             ourSession,
             new MockGameView(),
-            width,
-            height
+            boardwidth,
+            boardheight,
+            10
             );
 
         
 
         uint slotTypeIndex = 0;
-        for (uint x = 0; x < width; x++)
+        for (uint x = 0; x < boardwidth; x++)
         {
-            for (uint y = 0; y < height; y++)
+            for (uint y = 0; y < boardheight; y++)
             {
                 var runeIndex = slotTypeIndex++ % 9;
                 game.AddSlot(x, y, new RuneSlot(slotTypeIndex,RuneType.Numeric,runeIndex));
-                game.AddRune(slotTypeIndex < (totalsize /2) ? GutterLocation.Left : GutterLocation.Right,new Rune(slotTypeIndex,RuneType.Numeric,runeIndex));
+                game.AddRune(slotTypeIndex <= totalsize /2 ? GutterLocation.Left : GutterLocation.Right,new Rune(slotTypeIndex,RuneType.Numeric,runeIndex));
                 
             }
         }

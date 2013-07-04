@@ -13,22 +13,24 @@ public class RuneGameGO : MonoBehaviour
     private IEnumerable<GameSession> _gameSessions;
     private GameSession _ourSession;
     private IGameView _gameView;
-    public uint Width { get; private set; }
-    public uint Height { get; private set; }
+    public uint ScreenWidth { get; private set; }
+    public uint BoardWidth { get; private set; }
+    public uint BoardHeight { get; private set; }
     public bool IsPlaying { get; private set; }
     public ScreenConfiguration Screen { get; private set; }
 
-    public void Initialize(IEnumerable<GameSession> gameSessions, GameSession ourSession,IGameView mockGameView, uint width, uint height)
+    public void Initialize(IEnumerable<GameSession> gameSessions, GameSession ourSession,IGameView mockGameView, uint boardwidth, uint boardheight, uint screenwidth)
     {
-        Screen = new ScreenConfiguration(width + 2);
+        Screen = new ScreenConfiguration(screenwidth);
 
         IsPlaying = false;
         
         _gameSessions = gameSessions;
         _ourSession = ourSession;
         _gameView = mockGameView;
-        Width = width;
-        Height = height;
+        BoardWidth = boardwidth;
+        BoardHeight = boardheight;
+        ScreenWidth = screenwidth;
 
         _gameBoard = GameObjectFactory.Create<GameBoardGO>("Game Board");
         _gameBoard.Initialize(this);
@@ -65,7 +67,10 @@ public class RuneGameGO : MonoBehaviour
     public void Start()
     {
         IsPlaying = true;
-        _gameBoard.Start();
+        _gameBoard.StartGame();
+
+        foreach (var gutter in _gutters)
+            gutter.Value.StartGame();
     }
 
 }

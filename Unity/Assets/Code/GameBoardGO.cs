@@ -7,7 +7,7 @@ using Assets.Code;
 public class GameBoardGO : MonoBehaviour
 {
     private RuneGameGO _game;
-    private List<RuneSlotGO> _runeSlots;
+    private Dictionary<uint,RuneSlotGO> _runeSlots;
 
     private bool isPanning;
     private bool canPanX, canPanY;
@@ -16,7 +16,7 @@ public class GameBoardGO : MonoBehaviour
     public void Initialize(RuneGameGO game)
     {
         _game = game;
-        _runeSlots = new List<RuneSlotGO>();
+        _runeSlots = new Dictionary<uint,RuneSlotGO>();
 
         transform.localScale = new Vector3(game.Screen.GridCellSize.x * game.BoardWidth, game.Screen.GridCellSize.y * game.BoardHeight, 1);
         
@@ -58,7 +58,7 @@ public class GameBoardGO : MonoBehaviour
 
         runeSlotGO.Initialize(_game, x, y, runeSlot);
 
-        _runeSlots.Add(runeSlotGO);
+        _runeSlots.Add(runeSlot.Id,runeSlotGO);
 
         
     }
@@ -79,8 +79,11 @@ public class GameBoardGO : MonoBehaviour
 
         }
         else if (Input.GetMouseButtonDown(0))
-            isPanning = true;
-
+        {
+            var mouseX = Input.mousePosition.x;
+            if (mouseX > _game.Screen.GridCellSize.x && mouseX < _game.Screen.Resolution.x - _game.Screen.GridCellSize.x)
+                isPanning = true;
+        }
     }
 
     private void PanBoard()
@@ -114,5 +117,10 @@ public class GameBoardGO : MonoBehaviour
             transform.localPosition.z);
     }
 
+
+    public void PlaceRune(uint slotId)
+    {
+        _runeSlots[slotId].Place();
+    }
 }
 

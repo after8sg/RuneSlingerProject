@@ -7,6 +7,12 @@ namespace Assets.Code
 	{
         public static void CreateSprite(GameObject gameObject,ITextureAssigner textureAssigner)
         {
+            CreateSpriteMesh(gameObject);
+            textureAssigner.Assign(gameObject.GetComponent<MeshRenderer>(),gameObject.GetComponent<MeshFilter>());
+        }
+
+        public static void CreateSpriteMesh(GameObject gameObject)
+        {
             var filter = gameObject.AddComponent<MeshFilter>();
             var renderer = gameObject.AddComponent<MeshRenderer>();
 
@@ -31,7 +37,7 @@ namespace Assets.Code
             mesh.RecalculateNormals();
 
             renderer.material = (Material)Resources.Load("SpriteMaterial");
-            textureAssigner.Assign(renderer, filter);
+            
         }
 	}
 }

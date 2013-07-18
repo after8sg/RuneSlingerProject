@@ -4,14 +4,25 @@ using Assets.Code;
 
 public class RuneGO : MonoBehaviour
 {
-    private Rune _rune;
+    public Rune Rune { get; private set; }
     private RuneGameGO _game;
-    public void Initialize(RuneGameGO game,Rune rune)
+    private GutterGO _gutter;
+
+    public void Initialize(GutterGO gutter,RuneGameGO game,Rune rune)
     {
-        _rune = rune;
+        Rune = rune;
         _game = game;
-        
+        _gutter = gutter;
+
         GameObjectHelpers.CreateSprite(gameObject, RuneTextureMap.GetRuneAssigner(rune.Type, rune.RuneTypeIndex));
+        gameObject.AddComponent<BoxCollider>();
     }
+
+    public void Place()
+    {
+        _gutter.Place(this);
+        
+    }
+
 }
 

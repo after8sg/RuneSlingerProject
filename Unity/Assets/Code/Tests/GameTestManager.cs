@@ -6,12 +6,23 @@ using Assets.Code.Abstract;
 public class GameTestManager : MonoBehaviour 
 {
 
-    class MockGameView : IGameView
+    class MockGameView : IGameCommands
     {
-        public bool CanPlaceRune(Rune rune, RuneSlot slot)
+        private readonly RuneGameGO _game;
+        public MockGameView(RuneGameGO game)
         {
-            return rune.Type == slot.Type && rune.RuneTypeIndex == slot.RuneTypeIndex;
+            _game = game;
         }
+
+        public void PlaceRune(Rune rune, RuneSlot slot)
+        {
+            if (rune.Type == slot.Type && rune.RuneTypeIndex == slot.RuneTypeIndex)
+                _game.RunePlaced(rune.Id, slot.Id);
+            else
+                _game.PlacementRejected(rune.Id, slot.Id);
+
+        }
+
     }
 
 	// Use this for initialization
@@ -19,14 +30,14 @@ public class GameTestManager : MonoBehaviour
     {
         var game = GameObjectFactory.Create<RuneGameGO>("Game");
         var ourSession = new GameSession("Player 1",1);
-        const int boardwidth = 5;
-        const int boardheight = 5;
+        const int boardwidth = 2;
+        const int boardheight = 2;
         const int totalsize = boardwidth * boardheight;
 
         game.Initialize(
             new[] { ourSession, new GameSession("Player 2", 2) },
             ourSession,
-            new MockGameView(),
+            new MockGameView(game),
             boardwidth,
             boardheight,
             10

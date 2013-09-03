@@ -10,11 +10,14 @@ using RuneSlinger.server.Entities;
 using log4net;
 using log4net.Config;
 using System;
+using System.Linq;
 using RuneSlinger.server.ValueObjects;
 using Configuration = NHibernate.Cfg.Configuration;
 using Log4NetLoggerFactory = ExitGames.Logging.Log4Net.Log4NetLoggerFactory;
 using RuneSlinger.server.Abstract;
 using RuneSlinger.server.Components;
+using Autofac;
+using RuneSlinger.server.Services;
 
 namespace RuneSlinger.server
 {
@@ -24,6 +27,7 @@ namespace RuneSlinger.server
         private static readonly ILog log = LogManager.GetLogger(typeof(Application));
         private readonly List<RunePeer> _peers;
         private ISessionFactory _sessionFactory;
+        private IContainer _container;
 
         
         public Registry Registry {get; private set;}
@@ -34,7 +38,7 @@ namespace RuneSlinger.server
             _peers = new List<RunePeer>();
             Registry = new Registry();
 
-            Registry.Set(new LobbyComponent(this));
+            Registry.Set(new LobbyComponent());
         }
 
         public ISession OpenSession()
@@ -44,12 +48,7 @@ namespace RuneSlinger.server
 
         public void DestroyPeer(RunePeer peer)
         {
-            //remove it from lobby
-            Registry.Get<LobbyComponent>(lobby =>
-                {
-                    if (lobby.Contains(peer))
-                        lobby.Leave(peer);
-                });
+            
 
             //remove it from the network session but not lobby
             _peers.Remove(peer);
@@ -62,7 +61,7 @@ namespace RuneSlinger.server
             //log.InfoFormat("Peer created at {0}:{1}", initRequest.RemoteIP, initRequest.RemotePort);
             //return new RunePeer(initRequest);
 
-            var peer = new RunePeer(this,initRequest);
+            var peer = new RunePeer(this,initRequest,_container);
             _peers.Add(peer);
             return peer;
         }
@@ -73,7 +72,7 @@ namespace RuneSlinger.server
             ExitGames.Logging.LogManager.SetLoggerFactory(Log4NetLoggerFactory.Instance);
 
             SetupHibernate();
-
+            SetupIOC();
             ////test code to test db transaction
             //using (var session = _sessionFactory.OpenSession())
             //{
@@ -95,6 +94,27 @@ namespace RuneSlinger.server
             //}
             //
             log.Info("------ Application started for RuneSlinger ------");
+        }
+
+        private void SetupIOC()
+        {
+            var containerBuilder = new ContainerBuilder();
+
+            containerBuilder.Register(c => this).As<IApplication>().SingleInstance();
+            containerBuilder.Register(c => _sessionFactory.OpenSession()).As<ISession>().InstancePerLifetimeScope();
+            containerBuilder.RegisterType<EventPublisher>().As<IEventPublisher>().InstancePerLifetimeScope();
+            containerBuilder.RegisterType<BSONSerializer>().As<ISerializer>().SingleInstance();
+            containerBuilder.RegisterType<LobbyService>().AsSelf().InstancePerLifetimeScope();
+            containerBuilder.RegisterType<ChallengeService>().AsSelf().InstancePerLifetimeScope();
+            containerBuilder.RegisterType<RuneGameService>().AsSelf().InstancePerLifetimeScope();
+
+            containerBuilder
+                .RegisterAssemblyTypes(typeof(Application).Assembly)
+                .Where(type => type.GetInterfaces().Any(inter => inter.IsGenericType && inter.GetGenericTypeDefinition() == typeof(ICommandHandler<>)))
+                .AsImplementedInterfaces()
+                .InstancePerDependency();
+
+            _container = containerBuilder.Build();
         }
 
         private void SetupHibernate()

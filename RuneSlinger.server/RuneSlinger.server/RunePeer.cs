@@ -20,6 +20,11 @@ using RuneSlinger.Base.Abstract;
 using RuneSlinger.server.CommandHandlers;
 using RuneSlinger.Base.Commands;
 using RuneSlinger.server.Abstract;
+using Autofac;
+using System.Reflection;
+using NHibernate;
+using RuneSlinger.server.Components;
+using RuneSlinger.server.Command;
 
 namespace RuneSlinger.server
 {
@@ -27,14 +32,19 @@ namespace RuneSlinger.server
     {
         private static readonly ILog log = LogManager.GetLogger(typeof(RunePeer));
         private readonly Application _application;
-        private readonly JsonSerializer _jsonSerializer;
+        
+        private readonly IContainer _container;
+        private readonly ISerializer _serializer;
 
+        public SessionAuth Auth { get; private set; }
         public Registry Registry { get; private set; }
 
-        public RunePeer(Application application,InitRequest initRequest) : base(initRequest.Protocol,initRequest.PhotonPeer)
+        public RunePeer(Application application,InitRequest initRequest,IContainer container) : base(initRequest.Protocol,initRequest.PhotonPeer)
         {
+            Auth = new SessionAuth();
             _application = application;
-            _jsonSerializer = new JsonSerializer();
+            _serializer = _container.Resolve<ISerializer>();
+            _container = container;
             Registry = new Registry();
 
             log.InfoFormat("Peer created at {0}:{1}", initRequest.RemoteIP, initRequest.RemotePort);
@@ -51,17 +61,23 @@ namespace RuneSlinger.server
             //    });
         }
 
-        public void Publish(IEvent @event)
+        //private void Publish(IEvent @event)
+        //{
+        //    log.InfoFormat("Publish {0}", @event.GetType());
+        //    SendEvent(
+        //        new EventData(
+        //            (byte)RuneEventCode.SendEvent, 
+        //            new Dictionary<byte, object>
+        //            {
+        //                {(byte) RuneEventCodeParameter.EventType, @event.GetType().AssemblyQualifiedName},
+        //                {(byte) RuneEventCodeParameter.EventBytes,SerializeBSON(@event)}
+        //            })
+        //            , new SendParameters { Unreliable = false });
+        //}
+
+        public void Authenticate(SessionAuth auth)
         {
-            SendEvent(
-                new EventData(
-                    (byte)RuneEventCode.SendEvent, 
-                    new Dictionary<byte, object>
-                    {
-                        {(byte) RuneEventCodeParameter.EventType, @event.GetType().AssemblyQualifiedName},
-                        {(byte) RuneEventCodeParameter.EventBytes,SerializeBSON(@event)}
-                    })
-                    , new SendParameters { Unreliable = false });
+            Auth = auth;
         }
 
         protected override void OnOperationRequest(OperationRequest operationRequest, SendParameters sendParameters)
@@ -93,12 +109,17 @@ namespace RuneSlinger.server
                 return;
             }
 
-            using (var session = _application.OpenSession())
+            //using (var session = _application.OpenSession())
+            using (var lifeTimeScope = _container.BeginLifetimeScope())
             {
-                using (var trans = session.BeginTransaction())
+
+                
+                //using (var trans = session.BeginTransaction())
+                using (var trans = lifeTimeScope.Resolve<ISession>().BeginTransaction())
                 {
                     try
                     {
+                        var events = lifeTimeScope.Resolve<IEventPublisher>();
                         //implementing command factory design
                         var commandContext = new CommandContext();
 
@@ -106,58 +127,88 @@ namespace RuneSlinger.server
                         var commandBytes = (byte[])operationRequest.Parameters[(byte)RuneOperationCodeParameter.CommandBytes];
                         var commandId = operationRequest.Parameters[(byte)RuneOperationCodeParameter.CommandId];
 
-                        ICommand command;
-                        using (var ms = new MemoryStream(commandBytes))
-                        {
-                            command = (ICommand)_jsonSerializer.Deserialize(new BsonReader(ms), Type.GetType(commandType));
-                        }
-
-                        var loginCommand = command as LoginCommand;
-                        var registerCommand = command as RegisterCommand;
-                        var sendlobbyMessageCommand = command as SendLobbyMessageCommand;
-                        var challengeCommand = command as ChallengePlayerCommand;
-                        var respondToChallengeCommand = command as RespondToChallengeCommand;
-
-                        if (loginCommand !=  null)
-                        {
-                            (new LoginHandler(session,_application)).Handle(this,commandContext, loginCommand);
-                        }
-                        else if (registerCommand != null)
-                        {
-                            (new RegisterHandler(session, _application)).Handle(this, commandContext, registerCommand);
-                        }
-                        else if (sendlobbyMessageCommand != null)
-                        {
-                            (new SendLobbyMessageHandler( _application)).Handle(this, commandContext, sendlobbyMessageCommand);
-                        }
-                        else if (challengeCommand != null)
-                        {
-                            (new ChallengePlayerHandler(session,_application)).Handle(this, commandContext, challengeCommand);
-                        }
-                        else if (respondToChallengeCommand != null)
-                        {
-                            (new RespondToChallengeHandler(session,_application)).Handle(this, commandContext, respondToChallengeCommand);
-                        }
-                        else
+                        var command = (ICommand)_serializer.Deserialize(commandBytes, Type.GetType(commandType));
+                        
+                        /// using IOC method
+                        object handler;
+                        if (!lifeTimeScope.TryResolve(typeof(ICommandHandler<>).MakeGenericType(new[] { command.GetType() }), out handler))
                         {
                             SendOperationResponse(new OperationResponse((byte)RuneOperationResponse.Invalid), sendParameters);
                             log.WarnFormat("Peer sent unknown command: {0}", commandType);
                             trans.Rollback();
                             return;
                         }
+                        
+                        handler.GetType().GetMethod("Handle", BindingFlags.Instance | BindingFlags.Public).Invoke(
+                            handler,
+                            new object[]
+                            {
+                                this,commandContext,command
+                            }
+                            );
+                        ///end of using IOC method
+                        ///
+
+                        ///-------------------------------------------------------------------------------
+                        ///using traditional method as compared to above
+                        ///
+                        //var loginCommand = command as LoginCommand;
+                        //var registerCommand = command as RegisterCommand;
+                        //var sendlobbyMessageCommand = command as SendLobbyMessageCommand;
+                        //var challengeCommand = command as ChallengePlayerCommand;
+                        //var respondToChallengeCommand = command as RespondToChallengeCommand;
+                        //var placeRuneCommand = command as PlaceRuneCommand;
+
+                        //if (loginCommand !=  null)
+                        //{
+                        //    (new LoginHandler(session,_application)).Handle(this,commandContext, loginCommand);
+                        //}
+                        //else if (registerCommand != null)
+                        //{
+                        //    (new RegisterHandler(session, _application)).Handle(this, commandContext, registerCommand);
+                        //}
+                        //else if (sendlobbyMessageCommand != null)
+                        //{
+                        //    (new SendLobbyMessageHandler( _application)).Handle(this, commandContext, sendlobbyMessageCommand);
+                        //}
+                        //else if (challengeCommand != null)
+                        //{
+                        //    (new ChallengePlayerHandler(session,_application)).Handle(this, commandContext, challengeCommand);
+                        //}
+                        //else if (respondToChallengeCommand != null)
+                        //{
+                        //    (new RespondToChallengeHandler(session,_application)).Handle(this, commandContext, respondToChallengeCommand);
+                        //}
+                        //else if (placeRuneCommand != null)
+                        //{
+                        //    (new PlaceRuneHandler()).Handle(this, commandContext, placeRuneCommand);
+                        //}
+                        //else
+                        //{
+                        //    SendOperationResponse(new OperationResponse((byte)RuneOperationResponse.Invalid), sendParameters);
+                        //    log.WarnFormat("Peer sent unknown command: {0}", commandType);
+                        //    trans.Rollback();
+                        //    return;
+                        //}
+                        ///
+                        ///-------------------------------------------------------------
+                        ///
 
                         var parameters = new Dictionary<byte, object>();
                         if (commandContext.Response != null)
                         {
-                            parameters[(byte)RuneOperationResponseParameter.CommandResponse] = SerializeBSON(commandContext.Response);
+                            parameters[(byte)RuneOperationResponseParameter.CommandResponse] = _serializer.Serialize(commandContext.Response);
                         }
 
-                        parameters[(byte)RuneOperationResponseParameter.OperationErrors] = SerializeBSON(commandContext.OperationErrors);
-                        parameters[(byte)RuneOperationResponseParameter.PropertyErrors] = SerializeBSON(commandContext.PropertyErrors);
+                        parameters[(byte)RuneOperationResponseParameter.OperationErrors] = _serializer.Serialize(commandContext.OperationErrors);
+                        parameters[(byte)RuneOperationResponseParameter.PropertyErrors] = _serializer.Serialize(commandContext.PropertyErrors);
                         parameters[(byte)RuneOperationResponseParameter.CommandId] = commandId;
 
                         SendOperationResponse(new OperationResponse((byte)RuneOperationResponse.CommandDispatched, parameters), sendParameters);
                         trans.Commit();
+
+                        //publish only if transaction is successful
+                        events.Commit();
                     }
                     catch (Exception ex)
                     {
@@ -172,15 +223,6 @@ namespace RuneSlinger.server
 
         }
 
-        private byte[] SerializeBSON(object obj)
-        {
-            using (var ms = new MemoryStream())
-            {
-                
-                _jsonSerializer.Serialize(new BsonWriter(ms), obj);
-                return ms.ToArray();
-            }
-        }
         private void SendMessage(NHibernate.ISession session, string message)
         {
             
@@ -191,6 +233,12 @@ namespace RuneSlinger.server
         {
             //photon telling client has disconnected
             log.InfoFormat("Peer disconnected {0}:{1}", reasonCode, reasonDetail);
+
+            using (var lifetime = _container.BeginLifetimeScope())
+            {
+                lifetime.Resolve < ICommandHandler<DisconnectCommand>>().Handle(this, new CommandContext(), new DisconnectCommand());
+            }
+
             _application.DestroyPeer(this);
         }
 

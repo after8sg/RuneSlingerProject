@@ -1,6 +1,7 @@
 ﻿
 using System.Collections.Generic;
 using Assets.Code.Abstract;
+using RuneSlinger.Base.ValueObjects;
 namespace Assets.Code
 {
 	public static class RuneTextureMap

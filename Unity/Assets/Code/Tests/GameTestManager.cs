@@ -2,6 +2,7 @@ using UnityEngine;
 using Assets.Code;
 using Assets.Code.ValueObjects;
 using Assets.Code.Abstract;
+using RuneSlinger.Base.ValueObjects;
 
 public class GameTestManager : MonoBehaviour 
 {
@@ -30,6 +31,7 @@ public class GameTestManager : MonoBehaviour
     {
         var game = GameObjectFactory.Create<RuneGameGO>("Game");
         var ourSession = new GameSession("Player 1",1);
+
         const int boardwidth = 2;
         const int boardheight = 2;
         const int totalsize = boardwidth * boardheight;

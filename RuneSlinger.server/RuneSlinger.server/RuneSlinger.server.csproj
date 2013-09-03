@@ -31,6 +31,9 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Autofac">
+      <HintPath>..\..\..\..\..\..\zzApp\Autofac.3.1.1\Autofac.dll</HintPath>
+    </Reference>
     <Reference Include="ExitGames.Logging.Log4Net">
       <HintPath>lib\ExitGames.Logging.Log4Net.dll</HintPath>
     </Reference>
@@ -74,15 +77,25 @@
   <ItemGroup>
     <Compile Include="Abstract\IApplication.cs" />
     <Compile Include="Abstract\ICommandHandler.cs" />
+    <Compile Include="Abstract\IEventPublisher.cs" />
     <Compile Include="Abstract\INetworkedSession.cs" />
+    <Compile Include="Abstract\ISerializer.cs" />
     <Compile Include="Application.cs" />
+    <Compile Include="BSONSerializer.cs" />
     <Compile Include="CommandContext.cs" />
     <Compile Include="CommandHandlers\ChallengePlayerHandler.cs" />
+    <Compile Include="CommandHandlers\DisconnectHandler.cs" />
     <Compile Include="CommandHandlers\LoginHandler.cs" />
+    <Compile Include="CommandHandlers\PlaceRuneHandler.cs" />
     <Compile Include="CommandHandlers\RegisterHandler.cs" />
     <Compile Include="CommandHandlers\RespondToChallengeHandler.cs" />
     <Compile Include="CommandHandlers\SendLobbyMessageHandler.cs" />
-    <Compile Include="Components\AuthComponent.cs" />
+    <Compile Include="Command\DisconnectCommand.cs" />
+    <Compile Include="EventPublisher.cs" />
+    <Compile Include="Services\ChallengeService.cs" />
+    <Compile Include="Services\LobbyService.cs" />
+    <Compile Include="Services\RuneGameService.cs" />
+    <Compile Include="ValueObjects\SessionAuth.cs" />
     <Compile Include="Components\ChallengeComponent.cs" />
     <Compile Include="Components\LobbyComponent.cs" />
     <Compile Include="Components\RuneGame.cs" />
@@ -91,6 +104,8 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Registry.cs" />
     <Compile Include="RunePeer.cs" />
+    <Compile Include="ServerRune.cs" />
+    <Compile Include="ServerSlot.cs" />
     <Compile Include="ValueObjects\ChallengeDirection.cs" />
     <Compile Include="ValueObjects\HashedPassword.cs" />
   </ItemGroup>

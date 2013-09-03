@@ -31,7 +31,8 @@ public class LobbyGO :
     private Vector2 _usersInLobbyScrollPosition;
     private LobbyState _lobbyState;
     private LobbySession _otherChallengeUser;
-    
+   
+
     public void Awake()
     {
         NetworkManager.Instance.RegisterEventHandler(this);
@@ -51,6 +52,8 @@ public class LobbyGO :
     public void AddSession(LobbySession session)
     {
         _sessions.Add(session.Id, session);
+
+        
     }
 
     public void Handle(SessionJoinedLobbyEvent @event)
@@ -171,7 +174,7 @@ public class LobbyGO :
         {
             _usersInLobbyScrollPosition = GUILayout.BeginScrollView(_usersInLobbyScrollPosition);
             {
-                foreach (var session in _sessions)
+                foreach (var session in _sessions.Where( t => t.Value.Id != GameManager.Instance.UserId))
                 {
                     if (!_sessionsInGame.Contains(session.Value.Id))
                     {
@@ -239,6 +242,16 @@ public class LobbyGO :
 
 
 
-    
+
+
+    public IEnumerable<LobbySession> GetSessionsForUsers(IEnumerable<uint> userids)
+    {
+        return _sessions.Values.Where(t => userids.Contains(t.Id)).ToList();
+    }
+
+    //internal void Initialise()
+    //{
+    //    throw new System.NotImplementedException();
+    //}
 }
 

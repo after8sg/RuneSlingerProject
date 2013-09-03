@@ -1,5 +1,5 @@
 ﻿
-using Assets.Code.ValueObjects;
+using RuneSlinger.Base.ValueObjects;
 namespace Assets.Code.Abstract
 {
 	public interface IGameCommands

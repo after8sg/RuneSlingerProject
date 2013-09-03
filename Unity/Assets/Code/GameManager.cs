@@ -8,7 +8,8 @@ using Assets.Code;
 public class GameManager : 
     MonoBehaviour, 
     IEventHandler<JoinLobbyEvent>,
-    IEventHandler<SessionJoinedGameEvent>
+    IEventHandler<SessionJoinedGameEvent>,
+    IEventHandler<GameEndedEvent>
 {
     public static GameManager Instance {get; private set;}
 
@@ -17,6 +18,7 @@ public class GameManager :
     private GameObject _loginGo;
     private LobbyGO _lobbyGo;
     private GameGO _gameGo;
+    private GameResultGO _gameResultGo;
 
     public void Start()
     {
@@ -53,7 +55,7 @@ public class GameManager :
 
         var go = new GameObject("Lobby");
         _lobbyGo = go.AddComponent<LobbyGO>();
-
+        
         foreach (var session in @event.Sessions)
             _lobbyGo.AddSession(session);
     }
@@ -66,7 +68,20 @@ public class GameManager :
         _lobbyGo.gameObject.SetActive(false);
 
         var go = new GameObject("Game");
+        var gameSessions = _lobbyGo.GetSessionsForUsers(@event.UserIds).Select(t => new GameSession(t.Username,t.Id)).ToList();
         _gameGo = go.AddComponent<GameGO>();
+        _gameGo.InitaliseSession(gameSessions,gameSessions.Single(s => s.UserId == UserId));
+    }
+
+    public void Handle(GameEndedEvent @event)
+    {
+        Destroy(_gameGo.gameObject);
+        
+
+        _gameResultGo = GameObjectFactory.Create<GameResultGO>("Game Result");
+        _gameResultGo.Initialise(@event,_gameGo.GameSessions);
+
+        _gameGo = null;
     }
 
     //public void Publish(IEvent @event)
@@ -116,6 +131,6 @@ public class GameManager :
 
     //}
 
-
+       
 }
 

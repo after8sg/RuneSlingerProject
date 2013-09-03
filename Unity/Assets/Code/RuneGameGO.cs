@@ -4,6 +4,7 @@ using Assets.Code;
 using System.Collections.Generic;
 using Assets.Code.ValueObjects;
 using System;
+using RuneSlinger.Base.ValueObjects;
 
 public class RuneGameGO : MonoBehaviour
 {

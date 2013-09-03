@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using Assets.Code.ValueObjects;
 using Assets.Code;
+using RuneSlinger.Base.ValueObjects;
 
 public class RuneGO : MonoBehaviour
 {

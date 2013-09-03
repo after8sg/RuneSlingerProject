@@ -3,6 +3,7 @@ using Assets.Code.ValueObjects;
 using System;
 using System.Collections.Generic;
 using Assets.Code;
+using RuneSlinger.Base.ValueObjects;
 
 public class GameBoardGO : MonoBehaviour
 {

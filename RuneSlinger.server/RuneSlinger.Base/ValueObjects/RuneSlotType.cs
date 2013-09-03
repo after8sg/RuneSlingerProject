@@ -1,5 +1,5 @@
 ﻿
-namespace Assets.Code
+namespace RuneSlinger.Base.ValueObjects
 {
 	public enum RuneType
 	{

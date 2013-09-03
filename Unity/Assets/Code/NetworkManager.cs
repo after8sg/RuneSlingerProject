@@ -70,7 +70,7 @@ namespace Assets.Code
                 //inter != IEventHandler<>
                 //inter == IEventHandler<LoginEvent>
                 //here inter refers to the second instead of the first definition
-                if (!inter.IsGenericType && inter.GetGenericTypeDefinition() != typeof(IEventHandler<>))
+                if (!inter.IsGenericType || inter.GetGenericTypeDefinition() != typeof(IEventHandler<>))
                     continue;
 
                 //the first argument refers to LoginEvent

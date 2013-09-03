@@ -46,13 +46,21 @@
     <Compile Include="Abstract\IEvent.cs" />
     <Compile Include="Commands\ChallengePlayerCommand.cs" />
     <Compile Include="Commands\LoginCommand.cs" />
+    <Compile Include="Commands\PlaceRuneCommand.cs" />
     <Compile Include="Commands\RegisterCommand.cs" />
     <Compile Include="Commands\RespondToChallengeCommand.cs" />
     <Compile Include="Commands\SendLobbyMessageCommand.cs" />
     <Compile Include="Events\ChallengeCreatedEvent.cs" />
     <Compile Include="Events\ChallengeRespondedToEvent.cs" />
+    <Compile Include="Events\GameEndedEvent.cs" />
+    <Compile Include="Events\GameParametersEstablishedEvent.cs" />
+    <Compile Include="Events\GameRuneEstablishedEvent.cs" />
+    <Compile Include="Events\GameRuneSlotEstablishedEvent.cs" />
+    <Compile Include="Events\GameStartedEvent.cs" />
     <Compile Include="Events\JoinLobbyEvent.cs" />
     <Compile Include="Events\LobbyMessageSendEvent.cs" />
+    <Compile Include="Events\RunePlacedEvent.cs" />
+    <Compile Include="Events\RunePlacementRejectedEvent.cs" />
     <Compile Include="Events\SessionJoinedGameEvent.cs" />
     <Compile Include="Events\SessionJoinedLobbyEvent.cs" />
     <Compile Include="Events\SessionLeftLobbyEvent.cs" />
@@ -66,7 +74,11 @@
     <Compile Include="RuneOperationResponse.cs" />
     <Compile Include="RuneOperationResponseParameter.cs" />
     <Compile Include="ValueObjects\ChallengeResponse.cs" />
+    <Compile Include="ValueObjects\GameEndedStatus.cs" />
     <Compile Include="ValueObjects\LobbySession.cs" />
+    <Compile Include="ValueObjects\Rune.cs" />
+    <Compile Include="ValueObjects\RuneSlot.cs" />
+    <Compile Include="ValueObjects\RuneSlotType.cs" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

@@ -1,21 +1,24 @@
 ﻿using RuneSlinger.server.Abstract;
 using RuneSlinger.server.Components;
 using RuneSlinger.Base.Commands;
+using RuneSlinger.server.Services;
 
 namespace RuneSlinger.server.CommandHandlers
 {
     public class SendLobbyMessageHandler : ICommandHandler<SendLobbyMessageCommand>
     {
-        private readonly IApplication _application;
+        private readonly LobbyService _lobby;
 
-        public SendLobbyMessageHandler(IApplication application)
+        public SendLobbyMessageHandler(LobbyService lobby)
         {
-            _application = application;
+            _lobby = lobby;
+
         }
 
         public void Handle(INetworkedSession session, CommandContext context, SendLobbyMessageCommand command)
         {
-            _application.Registry.Get<LobbyComponent>(lobby => lobby.SendMessage(session, command.Message));
+            _lobby.SendMessage(session, command.Message);
+            
         }
     }
 }

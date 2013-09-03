@@ -4,6 +4,7 @@ using Assets.Code.ValueObjects;
 using System.Collections.Generic;
 using System.Linq;
 using Assets.Code.Abstract;
+using RuneSlinger.Base.ValueObjects;
 
 
 public class GutterGO : MonoBehaviour

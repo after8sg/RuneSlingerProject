@@ -8,18 +8,19 @@ using RuneSlinger.server.Entities;
 using System;
 using RuneSlinger.server.ValueObjects;
 using RuneSlinger.server.Components;
+using RuneSlinger.server.Services;
 
 namespace RuneSlinger.server.CommandHandlers
 {
     public class RegisterHandler : ICommandHandler<RegisterCommand>
     {
         private readonly ISession _database;
-        private readonly IApplication _application;
+        private readonly LobbyService _lobby;
 
-        public RegisterHandler(ISession database,IApplication application)
+        public RegisterHandler(ISession database,LobbyService lobby)
         {
             _database = database;
-            _application = application;
+            _lobby = lobby;
         }
 
         public void Handle(INetworkedSession session,CommandContext context, RegisterCommand command)
@@ -57,13 +58,14 @@ namespace RuneSlinger.server.CommandHandlers
             };
 
             _database.Save(user);
-            session.Registry.Set(new AuthComponent(user.Id, user.Username, user.Email));
+            session.Authenticate(new SessionAuth(user.Id, user.Username, user.Email));
 
             //try to join a session
             try
             {
                 //lobby.Join will throw operationException if fail
-                _application.Registry.Get<LobbyComponent>(lobby => lobby.Join(session));
+                //_application.Registry.Get<LobbyComponent>(lobby => lobby.Join(session));
+                _lobby.Join(session);
             }
             catch (OperationException ex)
             {

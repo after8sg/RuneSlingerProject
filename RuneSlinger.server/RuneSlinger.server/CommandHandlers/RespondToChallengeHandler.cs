@@ -3,26 +3,24 @@ using RuneSlinger.server.Abstract;
 using RuneSlinger.Base.Commands;
 using NHibernate;
 using RuneSlinger.server.Components;
+using RuneSlinger.server.Services;
 
 namespace RuneSlinger.server.CommandHandlers
 {
     public class RespondToChallengeHandler : ICommandHandler<RespondToChallengeCommand>
     {
-        public readonly ISession _database;
-        public readonly IApplication _application;
+        
+        private readonly ChallengeService _challengeService;
 
-        public RespondToChallengeHandler(ISession database, IApplication application)
+        public RespondToChallengeHandler(ChallengeService challengeService)
         {
-            _database = database;
-            _application = application;
+            _challengeService = challengeService;
+
         }
 
         public void Handle(INetworkedSession session, CommandContext context, RespondToChallengeCommand command)
         {
-            session.Registry.Get<ChallengeComponent>(challenge =>
-                {
-                    challenge.Respond(command.Response);
-                });
+            _challengeService.Respond(session, command.Response);
         }
 
         

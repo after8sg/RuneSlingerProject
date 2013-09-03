@@ -6,6 +6,7 @@ using NHibernate.Linq;
 using System.Linq;
 using RuneSlinger.server.Entities;
 using RuneSlinger.server.Components;
+using RuneSlinger.server.Services;
 
 namespace RuneSlinger.server.CommandHandlers
 {
@@ -15,10 +16,13 @@ namespace RuneSlinger.server.CommandHandlers
         private readonly IApplication _application;
         private static readonly object AuthLock = new object();
 
-        public LoginHandler(ISession database,IApplication application)
+        private readonly LobbyService _lobby;
+
+        public LoginHandler(ISession database,IApplication application,LobbyService lobby)
         {
             _database = database;
             _application = application;
+            _lobby = lobby;
         }
 
         public void Handle(INetworkedSession session, CommandContext context, LoginCommand command)
@@ -46,20 +50,22 @@ namespace RuneSlinger.server.CommandHandlers
             lock (AuthLock)
             {
                 //check if any one is logged in using the same id
-                if (_application.Sessions.Any(s => s.Registry.TryGet<AuthComponent, bool>(auth => auth.Id == user.Id)))
+                if (_application.Sessions.Any(s => s.Auth.Id == user.Id))
                 {
                     context.RaiseOperationError("You cannot log in more than once");
                     return;
                 }
 
-                session.Registry.Set(new AuthComponent(user.Id, user.Username, user.Email));
+                //session.Registry.Set(new SessionAuth(user.Id, user.Username, user.Email));
+                session.Authenticate(new SessionAuth(user.Id, user.Username, user.Email));
             }
 
             //try to join a session
             try
             {
                 //lobby.Join will throw operationException if fail
-                _application.Registry.Get<LobbyComponent>(lobby => lobby.Join(session));
+                //_application.Registry.Get<LobbyComponent>(lobby => lobby.Join(session));
+                _lobby.Join(session);
             }
             catch (OperationException ex)
             {
